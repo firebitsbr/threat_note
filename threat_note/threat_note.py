@@ -15,18 +15,17 @@ import random
 import re
 import time
 
-
-from flask import flash
 from flask import Flask
+from flask import flash
 from flask import make_response
 from flask import redirect
 from flask import render_template
 from flask import request
 from flask import url_for
+from flask.ext.login import LoginManager
 from flask.ext.login import current_user
 from flask.ext.login import login_required
 from flask.ext.login import login_user
-from flask.ext.login import LoginManager
 from flask.ext.login import logout_user
 from flask.ext.wtf import Form
 from libs import circl
@@ -105,8 +104,8 @@ def register():
 
             # Set up the settings table when the first user is registered.
             if not Setting.query.filter_by(_id=1).first():
-                settings = Setting('off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', '', '', '',
-                                   '', '', '', '', '', '', '', '', '')
+                settings = Setting('off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off', 'off',
+                                   '', '', '', '', '', '', '', '', '', '', '', '')
                 db_session.add(settings)
             # Commit all database changes once they have been completed
             db_session.commit()
@@ -475,6 +474,7 @@ def editobject(uid):
     except Exception as e:
         return render_template('error.html', error=e)
 
+
 @app.route('/editcampaign/<uid>', methods=['POST', 'GET'])
 @login_required
 def editcampaign(uid):
@@ -675,7 +675,7 @@ def insertnewfield():
         return render_template('error.html', error=e)
 
 
-@app.route('/network/<uid>/info', methods=['GET'])
+@app.route('/<uid>/info', methods=['GET'])
 @login_required
 def objectsummary(uid):
     try:
@@ -886,92 +886,6 @@ def profile():
         return render_template('error.html', error=e)
 
 
-@app.route('/victims/<uid>/info', methods=['GET'])
-@login_required
-def victimobject(uid):
-    try:
-        http = Indicator.query.filter(Indicator.object == uid).first()
-        newdict = helpers.row_to_dict(http)
-        settings = Setting.query.filter_by(_id=1).first()
-        taglist = http.tags.split(",")
-
-        temprel = {}
-        if http.relationships:
-            rellist = http.relationships.split(",")
-            for rel in rellist:
-                reltype = Indicator.query.filter(Indicator.object == rel)
-                temprel[reltype.object] = reltype.type
-
-        reldata = len(temprel)
-        jsonvt = ""
-        whoisdata = ""
-        odnsdata = ""
-        circldata = ""
-        circlssl = ""
-        pt_pdns_data = ""
-        pt_whois_data = ""
-        pt_pssl_data = ""
-        pt_host_attr_data = ""
-        farsightdata = ""
-        # shodaninfo = ""
-        # Run ipwhois or domainwhois based on the type of indicator
-        if str(http.type) == "IPv4" or str(http.type) == "IPv6":
-            if settings.vtinfo == "on":
-                jsonvt = virustotal.vt_ipv4_lookup(str(http.object))
-            if settings.whoisinfo == "on":
-                whoisdata = whoisinfo.ipwhois(str(http.object))
-            if settings.odnsinfo == "on":
-                odnsdata = opendns.ip_investigate(str(http.object))
-            if settings.circlinfo == "on":
-                circldata = circl.circlquery(str(http.object))
-            if settings.circlssl == "on":
-                circlssl = circl.circlssl(str(http.object))
-            if settings.pt_pdns == "on":
-                pt_pdns_data = passivetotal.pt_lookup('dns', str(http.object))
-            if settings.pt_whois == "on":
-                pt_whois_data = passivetotal.pt_lookup('whois', str(http.object))
-            if settings.pt_pssl == "on":
-                pt_pssl_data = passivetotal.pt_lookup('ssl', str(http.object))
-            if settings.pt_host_attr == "on":
-                pt_host_attr_data = passivetotal.pt_lookup('attributes', str(http.object))
-            if settings.farsightinfo == "on":
-                farsightdata = farsight.farsightip(str(http.object))
-        elif str(http.type) == "Domain":
-            if settings.whoisinfo == "on":
-                whoisdata = whoisinfo.domainwhois(str(http.object))
-            if settings.vtinfo == "on":
-                jsonvt = virustotal.vt_domain_lookup(str(http.object))
-            if settings.odnsinfo == "on":
-                odnsdata = opendns.domains_investigate(
-                    str(http.object))
-            if settings.circlinfo == "on":
-                circldata = circl.circlquery(str(http.object))
-            if settings.pt_pdns == "on":
-                pt_pdns_data = passivetotal.pt_lookup('dns', str(http.object))
-            if settings.pt_whois == "on":
-                pt_whois_data = passivetotal.pt_lookup('whois', str(http.object))
-            if settings.pt_pssl == "on":
-                pt_pssl_data = passivetotal.pt_lookup('ssl', str(http.object))
-            if settings.pt_host_attr == "on":
-                pt_host_attr_data = passivetotal.pt_lookup('attributes', str(http.object))
-        if settings.whoisinfo == "on":
-            if str(http.type) == "Domain":
-                address = str(whoisdata['city']) + ", " + str(
-                    whoisdata['country'])
-            else:
-                address = str(whoisdata['nets'][0]['city']) + ", " + str(
-                    whoisdata['nets'][0]['country'])
-        else:
-            address = "Information about " + str(http.object)
-        return render_template('victimobject.html', records=newdict, jsonvt=jsonvt, whoisdata=whoisdata,
-                               odnsdata=odnsdata, circldata=circldata, circlssl=circlssl, settingsvars=settings,
-                               address=address, temprel=temprel, reldata=reldata, taglist=taglist, farsightdata=farsightdata,
-                               pt_pdns_data=pt_pdns_data, pt_whois_data=pt_whois_data, pt_pssl_data=pt_pssl_data,
-                               pt_host_attr_data=pt_host_attr_data)
-    except Exception as e:
-        return render_template('error.html', error=e)
-
-
 @app.route('/files/<uid>/info', methods=['GET'])
 @login_required
 def filesobject(uid):
@@ -1034,7 +948,6 @@ def download(uid):
         "Content-Disposition"] = "attachment; filename=" + uid + "-campaign.csv"
     response.headers["Content-type"] = "text/csv"
     return response
-
 
 
 @app.teardown_appcontext

@@ -60,13 +60,15 @@
                 <tbody>
                   {% for p in network %}
                   <tr>
-                    {% if p['type'] == "Threat Actor" %}
-                      <td><a href="/threatactors/{{ p['object'] }}/info">{{ p['object'] }}</a></td>
-                    {% elif p['type'] == "Hash" %}
-                      <td><a href="/files/{{ p['object'] }}/info">{{ p['object'] }}</a></td>
-                    {% else %}
-                      <td><a href="/network/{{ p['object'] }}/info">{{ p['object'] }}</a></td>
-                    {% endif %}
+                    <!-- {% if p['type'] == "Threat Actor" %} -->
+                    <!--   <td><a href="/threatactors/{{ p['object'] }}/info">{{ p['object'] }}</a></td> -->
+                    <!-- {% elif p['type'] == "Hash" %} -->
+                    <!--   <td><a href="/files/{{ p['object'] }}/info">{{ p['object'] }}</a></td> -->
+                    <!-- {% else %} -->
+                    <!--   <td><a href="/network/{{ p['object'] }}/info">{{ p['object'] }}</a></td> -->
+                    <!-- {% endif %} -->
+
+                    <td><a href="/{{ p['object'] }}/info">{{ p['object'] }}</a></td>
 
                     <td>{{ p['type'] }}</td>
 
